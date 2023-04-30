@@ -1,10 +1,10 @@
-import 'package:app_chat/screens/chat_page.dart';
-import 'package:app_chat/shared/api_key_dialog.dart';
 import 'package:dart_openai/openai.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants.dart';
+import '../shared/api_key_dialog.dart';
+import 'chat_page.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
