@@ -1,8 +1,8 @@
-# app_chat
+# FlutterChatGPT
 
-Chat App with WebSocket Backend
+ChatGPT app built with Flutter
 
-![Flutter Chat App UI and websocket](https://imgur.com/TVqui84.png)
+![Flutter ChatGPT](https://imgur.com/YGUBL4x.png)
 
 ## Getting Started
 
