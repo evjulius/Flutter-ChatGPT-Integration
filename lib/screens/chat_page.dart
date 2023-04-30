@@ -1,52 +1,37 @@
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:dart_openai/openai.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_chat_ui/flutter_chat_ui.dart';
 import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
-import 'package:web_socket_client/web_socket_client.dart';
 
 class ChatPage extends StatefulWidget {
-  const ChatPage({super.key, required this.name});
+  const ChatPage({super.key, this.name});
 
-  final String name;
+  final String? name;
 
   @override
   State<ChatPage> createState() => _ChatPageState();
 }
 
 class _ChatPageState extends State<ChatPage> {
-  // final socket = WebSocket(Uri.parse('ws://localhost:8080')); // if run on Windows/Web
-  // final socket = WebSocket(Uri.parse('ws://0.tcp.ap.ngrok.io:17306')); // If use ngrok
-  final socket =
-      WebSocket(Uri.parse('ws://10.0.2.2:8080')); // If using emulator
   final List<types.Message> _messages = [];
-  late types.User otherUser;
-  late types.User me;
+  late types.User ai;
+  late types.User user;
+
+  late String appBarTitle;
+
+  var chatResponseId = '';
+  var chatResponseContent = '';
 
   @override
   void initState() {
     super.initState();
-    otherUser = types.User(id: widget.name, firstName: widget.name);
-    me = const types.User(id: 'Fareez', firstName: 'Fareez');
-    // Listen to messages from the server.
-    socket.messages.listen((incomingMessage) {
-      // Split the response into the JSON string and the "from" string
-      List<String> parts = incomingMessage.split(' from ');
-      String jsonString = parts[0];
+    ai = const types.User(id: 'ai', firstName: 'AI');
+    user = const types.User(id: 'user', firstName: 'You');
 
-      // Parse the JSON string using the jsonDecode() function
-      Map<String, dynamic> data = jsonDecode(jsonString);
-
-      // Access the values from the parsed JSON object
-      String id = data['id'];
-      String msg = data['msg'];
-      String timestamp = data['timestamp'];
-
-      // if (id == otherUser.id) {
-      onMessageReceived(msg);
-      // }
-    });
+    appBarTitle = widget.name ?? 'New Chat';
   }
 
   String randomString() {
@@ -55,62 +40,101 @@ class _ChatPageState extends State<ChatPage> {
     return base64UrlEncode(values);
   }
 
-  void onMessageReceived(String message) {
+  void _completeChat(String prompt) async {
+    // OpenAIChatCompletionModel chatCompletion =
+    //     await OpenAI.instance.chat.create(
+    //   model: "gpt-3.5-turbo",
+    //   messages: [
+    //     OpenAIChatCompletionChoiceMessageModel(
+    //       content: prompt,
+    //       role: OpenAIChatMessageRole.user,
+    //     ),
+    //   ],
+    // );
+
+    // debugPrint(chatCompletion.choices.toString());
+    // debugPrint(chatCompletion.toString());
+
+    // onMessageReceived(chatCompletion.choices.first.message.content);
+
+    Stream<OpenAIStreamChatCompletionModel> chatStream =
+        OpenAI.instance.chat.createStream(
+      model: "gpt-3.5-turbo",
+      messages: [
+        OpenAIChatCompletionChoiceMessageModel(
+          content: prompt,
+          role: OpenAIChatMessageRole.user,
+        )
+      ],
+    );
+
+    chatStream.listen((chatStreamEvent) {
+      debugPrint(chatStreamEvent.toString());
+      // existing id: just update to the same text bubble
+      if (chatResponseId == chatStreamEvent.id) {
+        chatResponseContent +=
+            chatStreamEvent.choices.first.delta.content ?? '';
+        _addMessageStream(chatResponseContent);
+      } else {
+        // new id: create new text bubble
+        chatResponseId = chatStreamEvent.id;
+        chatResponseContent = chatStreamEvent.choices.first.delta.content ?? '';
+        onMessageReceived(id: chatResponseId, message: chatResponseContent);
+      }
+    });
+  }
+
+  void onMessageReceived({String? id, required String message}) {
     var newMessage = types.TextMessage(
-      author: otherUser,
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      author: ai,
+      id: id ?? DateTime.now().millisecondsSinceEpoch.toString(),
       text: message,
       createdAt: DateTime.now().millisecondsSinceEpoch,
     );
     _addMessage(newMessage);
   }
 
+  // add new bubble to chat
   void _addMessage(types.Message message) {
     setState(() {
       _messages.insert(0, message);
     });
   }
 
-  void _handleSendPressed(types.PartialText message) {
+  // modify last bubble in chat
+  void _addMessageStream(String message) {
+    setState(() {
+      _messages.first =
+          (_messages.first as types.TextMessage).copyWith(text: message);
+    });
+  }
+
+  void _handleSendPressed(types.PartialText message) async {
     final textMessage = types.TextMessage(
-      author: me,
+      author: user,
       createdAt: DateTime.now().millisecondsSinceEpoch,
       id: randomString(),
       text: message.text,
     );
 
-    var payload = {
-      'id': me.id,
-      'msg': message.text,
-      'timestamp': DateTime.now().millisecondsSinceEpoch.toString(),
-    };
-
-    socket.send(json.encode(payload));
-
     _addMessage(textMessage);
+    _completeChat(message.text);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Chat with ${widget.name}'),
+        title: Text(appBarTitle),
       ),
       body: Chat(
         messages: _messages,
         onSendPressed: _handleSendPressed,
-        user: me,
+        user: user,
         theme: DefaultChatTheme(
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    // Close the connection.
-    socket.close();
-    super.dispose();
   }
 }

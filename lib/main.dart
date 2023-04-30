@@ -1,4 +1,4 @@
-import 'package:app_chat/screens/contacts_page.dart';
+import 'package:app_chat/screens/home.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -11,16 +11,11 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.purple,
-        useMaterial3: true,
-      ),
-      darkTheme: ThemeData.dark(
-        useMaterial3: true,
-      ),
+      title: 'ChatGPT Flutter',
+      theme: ThemeData(primarySwatch: Colors.purple, useMaterial3: true),
+      darkTheme: ThemeData.dark(useMaterial3: true),
       themeMode: ThemeMode.system,
-      home: const ContactsPage(),
+      home: const Home(),
     );
   }
 }
