@@ -1,8 +1,11 @@
 {
   "hosting": {
     "public": "build/web",
-    "site": "chat-app-ws",
-    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
     "rewrites": [
       {
         "source": "**",
