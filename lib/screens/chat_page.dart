@@ -17,6 +17,7 @@ class ChatPage extends StatefulWidget {
 
 class _ChatPageState extends State<ChatPage> {
   final List<types.Message> _messages = [];
+  final List<OpenAIChatCompletionChoiceMessageModel> _aiMessages = [];
   late types.User ai;
   late types.User user;
 
@@ -57,15 +58,15 @@ class _ChatPageState extends State<ChatPage> {
 
     // onMessageReceived(chatCompletion.choices.first.message.content);
 
+    _aiMessages.add(OpenAIChatCompletionChoiceMessageModel(
+      content: prompt,
+      role: OpenAIChatMessageRole.user,
+    ));
+
     Stream<OpenAIStreamChatCompletionModel> chatStream =
         OpenAI.instance.chat.createStream(
       model: "gpt-3.5-turbo",
-      messages: [
-        OpenAIChatCompletionChoiceMessageModel(
-          content: prompt,
-          role: OpenAIChatMessageRole.user,
-        )
-      ],
+      messages: _aiMessages,
     );
 
     chatStream.listen((chatStreamEvent) {
@@ -74,7 +75,17 @@ class _ChatPageState extends State<ChatPage> {
       if (chatResponseId == chatStreamEvent.id) {
         chatResponseContent +=
             chatStreamEvent.choices.first.delta.content ?? '';
+
         _addMessageStream(chatResponseContent);
+
+        if (chatStreamEvent.choices.first.finishReason == "stop") {
+          _aiMessages.add(OpenAIChatCompletionChoiceMessageModel(
+            content: chatResponseContent,
+            role: OpenAIChatMessageRole.assistant,
+          ));
+          chatResponseId = '';
+          chatResponseContent = '';
+        }
       } else {
         // new id: create new text bubble
         chatResponseId = chatStreamEvent.id;
