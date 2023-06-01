@@ -26,6 +26,8 @@ class _ChatPageState extends State<ChatPage> {
   var chatResponseId = '';
   var chatResponseContent = '';
 
+  bool isAiTyping = false;
+
   @override
   void initState() {
     super.initState();
@@ -79,6 +81,7 @@ class _ChatPageState extends State<ChatPage> {
         _addMessageStream(chatResponseContent);
 
         if (chatStreamEvent.choices.first.finishReason == "stop") {
+          isAiTyping = false;
           _aiMessages.add(OpenAIChatCompletionChoiceMessageModel(
             content: chatResponseContent,
             role: OpenAIChatMessageRole.assistant,
@@ -91,6 +94,7 @@ class _ChatPageState extends State<ChatPage> {
         chatResponseId = chatStreamEvent.id;
         chatResponseContent = chatStreamEvent.choices.first.delta.content ?? '';
         onMessageReceived(id: chatResponseId, message: chatResponseContent);
+        isAiTyping = true;
       }
     });
   }
@@ -139,6 +143,10 @@ class _ChatPageState extends State<ChatPage> {
         title: Text(appBarTitle),
       ),
       body: Chat(
+        typingIndicatorOptions: TypingIndicatorOptions(
+          typingUsers: [if (isAiTyping) ai],
+        ),
+        inputOptions: InputOptions(enabled: !isAiTyping),
         messages: _messages,
         onSendPressed: _handleSendPressed,
         user: user,
