@@ -37,8 +37,8 @@ jobs:
         run: |
           echo "# :rocket: Successfully deployed Web to Firebase" >> $GITHUB_STEP_SUMMARY
           echo "The job was automatically triggered by a ${{ github.event_name }} event." >> $GITHUB_STEP_SUMMARY
-          echo >> $GITHUB_STEP_SUMMARY
-          echo ":blue_heart: Using **Flutter {{ steps.flutter-action.outputs.CHANNEL }}** >> $GITHUB_STEP_SUMMARY
-          echo ":blue_heart: Version {{ steps.flutter-action.outputs.VERSION }}" >> $GITHUB_STEP_SUMMARY
-          echo >> $GITHUB_STEP_SUMMARY
-          echo ":link: URLs: {{ steps.firebase_deploy.outputs.urls }}"
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo ":blue_heart: Using **Flutter ${{ steps.flutter-action.outputs.CHANNEL }}** >> $GITHUB_STEP_SUMMARY
+          echo ":blue_heart: Version ${{ steps.flutter-action.outputs.VERSION }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo ":link: URLs: ${{ steps.firebase_deploy.outputs.urls }}"
