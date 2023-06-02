@@ -35,7 +35,7 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   # cupertino_icons: ^1.0.2
   flutter_chat_ui: ^1.6.6
-  dart_openai: ^2.0.1
+  dart_openai: 1.9.7
   shared_preferences: ^2.1.0
   url_launcher: ^6.1.10
 

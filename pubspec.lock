@@ -53,10 +53,10 @@ packages:
     dependency: "direct main"
     description:
       name: dart_openai
-      sha256: cbe06e5e7de6e6ae09a0f1a64d40ce2328b72ccaab4d65e82f8bc7d0511da502
+      sha256: a263fa272caebe616d3985e08fbcf57377a6942e61ca2eccc16e00a2dbe7140d
       url: "https://pub.dev"
     source: hosted
-    version: "2.0.1"
+    version: "1.9.7"
   diffutil_dart:
     dependency: transitive
     description:
@@ -550,5 +550,5 @@ packages:
     source: hosted
     version: "1.0.0"
 sdks:
-  dart: ">=3.0.0 <4.0.0"
+  dart: ">=3.0.0-417 <4.0.0"
   flutter: ">=3.3.0"
