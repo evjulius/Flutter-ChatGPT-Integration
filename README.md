@@ -1,8 +1,21 @@
-# FlutterChatGPT
+![Flutter](https://img.shields.io/badge/Flutter%203-%2302569B.svg?style=for-the-badge&logo=Flutter&logoColor=white)
+
+# Flutter ChatGPT
 
 ChatGPT app built with Flutter
 
 ![Flutter ChatGPT](https://imgur.com/YGUBL4x.png)
+
+## Features
+
+- Chat streaming
+- Chats are preserved in local storage, you can get back to the conversation at any time
+- Upcoming: Dark mode
+- Upcoming: Better UI
+
+## Try it out
+
+App is available for Android, Web and Windows. See [releases](https://github.com/iqfareez/flutter_chatgpt/releases) for info
 
 ## Getting Started
 

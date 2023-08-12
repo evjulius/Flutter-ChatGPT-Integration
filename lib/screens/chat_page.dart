@@ -5,11 +5,16 @@ import 'package:dart_openai/openai.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_chat_ui/flutter_chat_ui.dart';
 import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
+import 'package:hive/hive.dart';
+
+import '../hive_model/chat_item.dart';
+import '../hive_model/message_item.dart';
+import '../hive_model/message_role.dart';
 
 class ChatPage extends StatefulWidget {
-  const ChatPage({super.key, this.name});
+  const ChatPage({super.key, required this.chatItem});
 
-  final String? name;
+  final ChatItem chatItem;
 
   @override
   State<ChatPage> createState() => _ChatPageState();
@@ -20,6 +25,7 @@ class _ChatPageState extends State<ChatPage> {
   final List<OpenAIChatCompletionChoiceMessageModel> _aiMessages = [];
   late types.User ai;
   late types.User user;
+  late Box messageBox;
 
   late String appBarTitle;
 
@@ -34,7 +40,31 @@ class _ChatPageState extends State<ChatPage> {
     ai = const types.User(id: 'ai', firstName: 'AI');
     user = const types.User(id: 'user', firstName: 'You');
 
-    appBarTitle = widget.name ?? 'New Chat';
+    messageBox = Hive.box('messages');
+
+    appBarTitle = widget.chatItem.title;
+
+    // read chat history from Hive
+    for (var messageItem in widget.chatItem.messages) {
+      messageItem as MessageItem;
+      // Add to chat view
+      final textMessage = types.TextMessage(
+        author: messageItem.role == MessageRole.ai ? ai : user,
+        createdAt: messageItem.createdAt.millisecondsSinceEpoch,
+        id: randomString(),
+        text: messageItem.message,
+      );
+
+      _messages.insert(0, textMessage);
+
+      // construct chatgpt messages
+      _aiMessages.add(OpenAIChatCompletionChoiceMessageModel(
+        content: messageItem.message,
+        role: messageItem.role == MessageRole.ai
+            ? OpenAIChatMessageRole.assistant
+            : OpenAIChatMessageRole.user,
+      ));
+    }
   }
 
   String randomString() {
@@ -44,22 +74,6 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   void _completeChat(String prompt) async {
-    // OpenAIChatCompletionModel chatCompletion =
-    //     await OpenAI.instance.chat.create(
-    //   model: "gpt-3.5-turbo",
-    //   messages: [
-    //     OpenAIChatCompletionChoiceMessageModel(
-    //       content: prompt,
-    //       role: OpenAIChatMessageRole.user,
-    //     ),
-    //   ],
-    // );
-
-    // debugPrint(chatCompletion.choices.toString());
-    // debugPrint(chatCompletion.toString());
-
-    // onMessageReceived(chatCompletion.choices.first.message.content);
-
     _aiMessages.add(OpenAIChatCompletionChoiceMessageModel(
       content: prompt,
       role: OpenAIChatMessageRole.user,
@@ -86,6 +100,7 @@ class _ChatPageState extends State<ChatPage> {
             content: chatResponseContent,
             role: OpenAIChatMessageRole.assistant,
           ));
+          _saveMessage(chatResponseContent, MessageRole.ai);
           chatResponseId = '';
           chatResponseContent = '';
         }
@@ -116,6 +131,14 @@ class _ChatPageState extends State<ChatPage> {
     });
   }
 
+  /// Save message to Hive database
+  void _saveMessage(String message, MessageRole role) {
+    final messageItem = MessageItem(message, role, DateTime.now());
+    messageBox.add(messageItem);
+    widget.chatItem.messages.add(messageItem);
+    widget.chatItem.save();
+  }
+
   // modify last bubble in chat
   void _addMessageStream(String message) {
     setState(() {
@@ -133,6 +156,7 @@ class _ChatPageState extends State<ChatPage> {
     );
 
     _addMessage(textMessage);
+    _saveMessage(message.text, MessageRole.user);
     _completeChat(message.text);
   }
 
